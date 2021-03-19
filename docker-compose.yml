@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  db:
+    hostname: test_db
+    image: mysql:latest
+    cap_add:
+      - SYS_NICE
+    command: [--default-authentication-plugin=mysql_native_password, --activate-all-roles-on-login ]
+    secrets:
+      - db_passwd
+    volumes:
+      - type: bind
+        source: ./data
+        target: /var/lib/mysql
+    configs:
+      - source: initdb
+        target: /docker-entrypoint-initdb.d/initdb.sql
+    environment:
+      MYSQL_DATABASE: testdb
+      MYSQL_RANDOM_ROOT_PASSWORD: foo
+      MYSQL_USER: appdev
+      MYSQL_PASSWORD_FILE: /run/secrets/db_passwd
+    networks:
+      - testnet
+  admin:
+    hostname: test_adm
+    image: adminer
+    networks:
+      - testnet
+  proxy:
+    image: nginx:1.13-alpine
+    hostname: test_proxy
+    volumes:
+      - type: bind
+        source: ./proxy/html
+        target: /usr/share/nginx/html
+        read_only: true
+      - type: bind
+        source: ./proxy/conf.full
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    ports:
+      - 8085:8085
+    networks:
+      - testnet
+  app:
+    image: python:3.8-alpine
+    hostname: test_app
+    environment:
+      - FLASK_ENV=development
+    volumes:
+      - type: bind
+        source: ./src
+        target: /code
+    entrypoint: ['/bin/sh', '-c']
+    working_dir: /code
+    command:  
+      - |
+        pip install --upgrade pip
+        pip install -r /code/requirements.txt
+        python ./server.py
+    networks:
+      - testnet
+
+secrets:
+  db_passwd:
+    file: ./local/passwd.txt
+
+configs:
+  initdb:
+    file: ./local/initdb.sql
+
+networks:
+  testnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.0.26.0/24"
