@@ -1,13 +1,5 @@
 # Lamp Stack
 
-#### Table of Contents
-
-1. [Module Description - What does the module do?](#module-description)
-2. [Setup - The basics of getting started with postgresql module](#setup)
-    * [What postgresql affects](#what-postgresql-affects)
-    * [Getting started with postgresql](#getting-started-with-postgresql)
-3. [Usage - Configuration options and additional functionality](#usage)
-
 ## Description
 
 This is a Lamp stack with MySQL, Python, Flask, Nginx, and Adminer.
